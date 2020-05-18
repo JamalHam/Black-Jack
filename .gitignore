@@ -1,0 +1,7 @@
+*.log
+*.log.*
+venv/
+env/
+.vscode/
+.idea/
+.DS_Store
