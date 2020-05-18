@@ -2,7 +2,7 @@ import random
 
 cardTypes = ['Heart', 'Spade', 'Club', 'Diamond']
 cardNums = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'Jack': 10, 'Queen': 10, 'King': 10, 'Ace': 11}
-bjack = False
+bjack = True
 
 class Card():
     def __init__(self, Suit, Rank, Value):
@@ -54,71 +54,85 @@ class Dealer():
     
 
 def BlackJack():
-    CardDeck = [Card(Suit, Rank, Val) for Suit in cardTypes for Rank, Val in cardNums.items()]
+    global bjack
     hand = Hand()
     dealer = Dealer()
-    random.shuffle(CardDeck)
-
     bet = 0
-    while bet == 0:
-        betInfo = input("how much are you betting? ")
 
-        if hand.chips >= int(betInfo):
-            print('thats a good amount')
-            bet = betInfo
-            hand.chips = hand.chips - int(betInfo)
-        else:
-            print('you bet too much, pick a lower number')
+    while bjack == True and hand.chips > 0:
+        continueGame = input("would you like to play a round round? (yes/no)")
+        if continueGame == 'yes':
+            bjack = False
 
-    if len(hand.cards) == 0:
-        startDealing(hand, dealer, CardDeck)
+        CardDeck = [Card(Suit, Rank, Val) for Suit in cardTypes for Rank, Val in cardNums.items()]
+        random.shuffle(CardDeck)
+        hand.cards = []
+        dealer.cards = []
 
-    # if hand.cardTotal == 21:
-    #     print('you won the round!')
-    #     hand.chips += bet*1.5
-    #     bjack = True
-    # elif hand.cardTotal > 21:
-    #     print('you lost the round')
-    #     bet = 0
-    #     bjack = False
+        while bet == 0:
+            betInfo = input("how much are you betting? ")
 
-    
-    while bjack == False:
-        print('bjack status')
-        print(bjack)
-
-        if checkWinner(hand, dealer, bet) == False: 
-            hit = input('Would you like to hit? (yes or no)')
-
-            if hit == "yes":
-                hand.cards.append(CardDeck.pop(0))
-                print('your hand')
-                for card in hand.cards:
-                    print(card.name())
-                hand.cardTotal = hand.getCardTotal()
-                print('your cartd total')
-                print(hand.cardTotal)
-                print('--------------------------------------')
-                
-
+            if hand.chips >= int(betInfo):
+                print('thats a good amount')
+                bet = betInfo
+                hand.chips = hand.chips - int(betInfo)
             else:
-                "No worries we'll skip your hit!!"
+                print('you bet too much, pick a lower number')
+
+        if len(hand.cards) == 0:
+            startDealing(hand, dealer, CardDeck)
+        
+        while bjack == False:
+            stand = False
+            checkWinner(hand, dealer, bet, stand)
+
+            if bjack == False and stand == False: 
+                hit = input('Would you like to hit? (yes or no or stand)')
+                if hit == 'stand':
+                    stand = True
+
+                if hit == "yes":
+                    hand.cards.append(CardDeck.pop(0))
+                    print('your hand')
+                    for card in hand.cards:
+                        print(card.name())
+                    hand.cardTotal = hand.getCardTotal()
+                    print('your card total')
+                    print(hand.cardTotal)
+                    print('--------------------------------------')
+                
+                elif hit == 'stand':
+                    hand.cardTotal = hand.getCardTotal()
+                    dealer.cardTotal = dealer.getCardTotal()
+
+                    print('your card total:')
+                    print(str(hand.cardTotal))
+                    print('dealer card total:')
+                    print(str(dealer.cardTotal))
+                    print('--------------------------------------')
+
+                else:
+                    "No worries we'll skip your hit!!"
 
             if 18 > dealer.cardTotal:
                 dealer.cards.append(CardDeck.pop(0))
                 for card in dealer.cards[:-1]:
                     print(card.name())
 
+    if hand.chips == 0:
+        print(' haha you gambled away all your money!!!')
+
         
-        
-def checkWinner(hand, dealer, bet):
+def checkWinner(hand, dealer, bet, stand):
     global bjack
     dealer.cardTotal = dealer.getCardTotal()
     hand.cardTotal = hand.getCardTotal()
 
     if dealer.cardTotal > 21 and 21 > hand.cardTotal:
         print('you won the round!')
-        hand.chips += bet*1.5
+        print('yout card total: ' + str(hand.cardTotal))
+        print('dealer card total: ' + str(dealer.cardTotal))
+        hand.chips += int(bet)*1.5
         bjack = True
         bet = 0
 
@@ -126,17 +140,48 @@ def checkWinner(hand, dealer, bet):
 
     elif hand.cardTotal > 21 and 21 > dealer.cardTotal:
         print('you lost the round')
+        print('yout card total: ' + str(hand.cardTotal))
+        print('dealer card total: ' + str(dealer.cardTotal))
         bjack = True
         bet = 0
         return True
+
+    elif hand.cardTotal > 21 and dealer.cardTotal > 21:
+        print('bust')
+        print('yout card total: ' + str(hand.cardTotal))
+        print('dealer card total: ' + str(dealer.cardTotal))
+        hand.chips += bet
+        bjack = True
+        bet = 0
+        return True
+
 
     elif dealer.cardTotal > 17 and hand.cardTotal > dealer.cardTotal:
         print('you won the round!')
-        hand.chips += bet*1.5
+        print('yout card total: ' + str(hand.cardTotal))
+        print('dealer card total: ' + str(dealer.cardTotal))
+        hand.chips += int(bet)*1.5
         bjack = True
         bet = 0
 
         return True
+
+    elif stand == True:
+        if hand.cardTotal > dealer.cardTotal and 22 > hand.cardTotal:
+            print('you won the round!')
+            print('yout card total: ' + str(hand.cardTotal))
+            print('dealer card total: ' + str(dealer.cardTotal))
+            hand.chips += int(bet)*1.5
+            bjack = True
+            bet = 0
+        else:
+            print('you lost the round')
+            print('yout card total: ' + str(hand.cardTotal))
+            print('dealer card total: ' + str(dealer.cardTotal))
+            bjack = True
+            bet = 0
+            return True
+
     else:
         return False
 
